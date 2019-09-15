@@ -4,7 +4,10 @@ const koaLogger = require('koa-logger');
 const koaFlashMessage = require('koa-flash-message').default;
 const session = require('koa-session');
 const override = require('koa-override-method');
-const routes = require('./routes');
+const serve = require("koa-static");
+const mount = require("koa-mount");
+const KoaRouter = require('koa-router');
+const api = require('./routes');
 const orm = require('./models');
 
 // App constructor
@@ -19,7 +22,6 @@ app.keys = [
 
 // expose ORM through context's prototype
 app.context.orm = orm;
-
 /**
  * Middlewares
  */
@@ -52,10 +54,17 @@ app.use((ctx, next) => {
   return next();
 });
 
+
+
 // Routing middleware
-app.use(routes.routes());
+const router = new KoaRouter();
+router.use('/api', api.routes());
+app.use(router.routes());
 
 // Serving react app
-app.use(require('koa-static')('./build'));
+const static_pages = new Koa();
+static_pages.use(serve("./build")); //serve the build directory
+app.use(mount("/", static_pages));
+
 
 module.exports = app;
